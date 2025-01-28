@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kare4Kids{% endblock %}</title>
+    <style>
+        /* General Styling for Navigation */
+        nav {
+            background-color: #87CEEB; /* Sky Blue Background */
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #FFFFFF; /* White Text */
+            font-weight: bold;
+            margin: 0 10px;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: #F2A7C5; /* Pink on Hover */
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">
+            <a href="{% url 'home' %}" style="color: #FFFFFF;">Kare4Kids</a>
+        </div>
+        <div class="links">
+            <a href="{% url 'register' %}">Register</a>
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'create_parent' %}">Create Parent</a>
+            <a href="{% url 'create_sitter' %}">Create Sitter</a>
+        </div>
+    </nav>
+    <main>
+        {% block content %}
+        <!-- Page-specific content will go here -->
+        {% endblock %}
+    </main>
+</body>
+</html>

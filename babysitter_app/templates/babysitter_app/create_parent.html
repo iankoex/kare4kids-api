@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends 'babysitter_app/base.html' %}
+
+{% block title %}Register - Kare4Kids{% endblock %}
+
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% if parent %}Update Parent{% else %}Create Parent{% endif %}</title>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #F4F7FB;
+            color: #264653;
+            margin: 0;
+            padding: 0;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            color: #264653;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #264653;
+        }
+
+        input,
+        textarea,
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #A7C7E7;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #87CEEB;
+            outline: none;
+        }
+
+        button {
+            background-color: #F2A7C5;
+            color: #FFFFFF;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #87CEEB;
+        }
+
+        .back-link {
+            text-align: center;
+            display: block;
+            margin-top: 10px;
+            color: #2A9D8F;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #F2A7C5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h1>{% if parent %}Update Parent{% else %}Create Parent{% endif %}</h1>
+
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" value="{{ parent.name|default_if_none:'' }}" required>
+
+            <label for="location">Location:</label>
+            <input type="text" name="location" id="location" value="{{ parent.location|default_if_none:'' }}" required>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" value="{{ parent.email|default_if_none:'' }}" required>
+
+            <label for="number_of_children">Number of Children:</label>
+            <input type="number" name="number_of_children" id="number_of_children" min="1"
+                value="{{ parent.number_of_children|default_if_none:1 }}" required>
+
+            <label for="profile_picture">Profile Picture:</label>
+            <input type="file" name="profile_picture" id="profile_picture">
+
+            <button type="submit">{% if parent %}Update{% else %}Create{% endif %}</button>
+            <a href="{% url 'parent_list' %}" class="back-link">Back to Parent List</a>
+        </form>
+    </div>
+</body>
+{% endblock %}
+
+</html>

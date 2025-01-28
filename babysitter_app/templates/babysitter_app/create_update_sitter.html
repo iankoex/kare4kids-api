@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% extends 'babysitter_app/base.html' %}
+
+    {% block title %}Register - Kare4Kids{% endblock %}
+    
+    {% block content %}
+    <title>{% if sitter %}Update Sitter{% else %}Create Sitter{% endif %}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+    <style>
+              body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #F4F7FB;
+            color: #264653; 
+            margin: 0;
+            padding: 0;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            color: #264653;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #FFFFFF; 
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #264653;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #A7C7E7;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #87CEEB; 
+            outline: none;
+        }
+
+        button {
+            background-color: #F2A7C5; 
+            color: #FFFFFF; 
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #87CEEB; 
+        }
+
+        .back-link {
+            text-align: center;
+            display: block;
+            margin-top: 10px;
+            color: #2A9D8F;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #F2A7C5; 
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="form-container">
+        <form method="post">
+            {% csrf_token %}
+            <h1>{% if sitter %}Update Sitter{% else %}Create Sitter{% endif %}</h1>
+            
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" value="{{ sitter.name|default_if_none:'' }}" required>
+            
+            <label for="bio">Bio:</label>
+            <textarea name="bio" id="bio" required>{{ sitter.bio|default_if_none:'' }}</textarea>
+            
+            <label for="hourly_rate">Hourly Rate:</label>
+            <input type="number" name="hourly_rate" id="hourly_rate" step="0.01" value="{{ sitter.hourly_rate|default_if_none:'' }}" required>
+            
+            <label for="experience">Experience (in years):</label>
+            <input type="number" name="experience" id="experience" value="{{ sitter.experience|default_if_none:'' }}" required>
+            
+            <label for="location">Location:</label>
+            <input type="text" name="location" id="location" value="{{ sitter.location|default_if_none:'' }}" required>
+            
+            <button type="submit">{% if sitter %}Update{% else %}Create{% endif %}</button>
+            <a href="{% url 'sitter_list' %}" class="back-link">Back to Sitter List</a>
+        </form>
+    </div>
+
+    {% endblock %}
+
+</body>
+
+</html>

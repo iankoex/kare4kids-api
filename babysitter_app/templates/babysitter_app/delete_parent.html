@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Delete</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .confirmation-box {
+            background-color: #ffffff;
+            border: 2px solid #2a9d8f;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            width: 350px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .confirmation-box h2 {
+            color: #264653;
+            margin-bottom: 1rem;
+        }
+        .confirmation-box p {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+        .confirmation-box button {
+            background-color: #e63946;
+            color: #ffffff;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        .confirmation-box button:hover {
+            background-color: #d62828;
+        }
+        .confirmation-box a {
+            display: inline-block;
+            text-decoration: none;
+            color: #264653;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="confirmation-box">
+        <h2>Confirm Deletion</h2>
+        <p>Are you sure you want to delete <strong>{{ parent.name }}</strong>?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit">Yes, Delete</button>
+            <a href="{% url 'parent_list' %}">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

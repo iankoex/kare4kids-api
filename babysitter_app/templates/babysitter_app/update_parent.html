@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if parent %}Update Parent{% else %}Create Parent{% endif %}</title>
+</head>
+{% extends 'babysitter_app/base.html' %}
+
+{% block title %}Register - Kare4Kids{% endblock %}
+
+{% block content %}
+<body>
+    <h1>{% if parent %}Update Parent{% else %}Create Parent{% endif %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" value="{{ parent.name|default_if_none:'' }}" required><br>
+
+        <label for="location">Location:</label>
+        <input type="text" name="location" id="location" value="{{ parent.location|default_if_none:'' }}" required><br>
+
+        <button type="submit">{% if parent %}Update{% else %}Create{% endif %}</button>
+    </form>
+    <a href="{% url 'parent_list' %}">Back to Parent List</a>
+</body>
+{% endblock %}
+</html>
