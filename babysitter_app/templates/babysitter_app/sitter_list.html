@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitter List</title>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #F4F7FB;
+            color: #264653;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            font-family: 'Poppins', sans-serif;
+            color: #264653;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        a {
+            color: #2A9D8F; 
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #F2A7C5; 
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .pagination a {
+            margin: 0 10px;
+            padding: 5px 10px;
+            background-color: #87CEEB; 
+            border-radius: 5px;
+        }
+
+        .pagination a:hover {
+            background-color: #F2A7C5; 
+        }
+
+        .current {
+            margin: 0 10px;
+            font-weight: bold;
+            color: #264653;
+        }
+
+        table {
+            width: 80%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #A7C7E7; 
+            text-align: left;
+        }
+
+        th {
+            background-color: #264653;
+            color: white;
+        }
+
+        td {
+            background-color: #FFFFFF;
+        }
+
+        .actions a {
+            margin: 0 5px;
+        }
+
+        .add-sitter {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #264653;
+            padding: 10px;
+            background-color: #F2A7C5;
+            border-radius: 5px;
+        }
+
+        .add-sitter:hover {
+            background-color: #87CEEB; 
+        }
+
+    </style>
+</head>
+{% extends 'babysitter_app/base.html' %}
+
+{% block title %}Register - Kare4Kids{% endblock %}
+
+{% block content %}
+<body>
+
+    <h1>Sitter List</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Hourly Rate</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sitter in page_obj %}
+                <tr>
+                    <td>{{ sitter.name }}</td>
+                    <td>{{ sitter.location }}</td>
+                    <td>{{ sitter.hourly_rate }}</td>
+                    <td class="actions">
+                        <a href="{% url 'update_sitter' sitter.pk %}">Edit</a> |
+                        <a href="{% url 'delete_sitter' sitter.pk %}" onclick="return confirm('Are you sure you want to delete this sitter?');">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            <ul>
+                {% for sitter in sitters %}
+                    <li>
+                        {{ sitter.name }} - {{ sitter.location }}
+                        <a href="{% url 'delete_sitter' sitter.pk %}">Delete</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+  
+    
+    <a href="{% url 'create_sitter' %}" class="add-sitter">Add New Sitter</a>
+
+</body>
+{% endblock %}
+</html>

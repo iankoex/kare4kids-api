@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Sitter</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #A7C7E7; 
+            color: #264653; 
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #FFFFFF; 
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2A9D8F;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #264653; 
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #87CEEB; 
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #2A9D8F;
+            color: #FFFFFF; 
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #264653; 
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #E5989B; 
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            color: #D67A7A;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Update Sitter Details</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" value="{{ sitter.name }}" required>
+
+            <label for="bio">Bio:</label>
+            <textarea name="bio" id="bio" required>{{ sitter.bio }}</textarea>
+
+            <label for="hourly_rate">Hourly Rate:</label>
+            <input type="number" name="hourly_rate" id="hourly_rate" step="0.01" value="{{ sitter.hourly_rate }}" required>
+
+            <label for="experience">Experience:</label>
+            <input type="number" name="experience" id="experience" value="{{ sitter.experience }}" required>
+
+            <label for="location">Location:</label>
+            <input type="text" name="location" id="location" value="{{ sitter.location }}" required>
+
+            <button type="submit">Update Sitter</button>
+        </form>
+        <a href="{% url 'sitter_list' %}">Back to Sitter List</a>
+    </div>
+</body>
+</html>
