@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kare4Kids</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F4F7FB; 
+            color: #264653; 
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #87CEEB; 
+            color: #FFFFFF; 
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid #F2A7C5; 
+        }
+
+        header h1 {
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        main {
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: #FFFFFF; 
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form p {
+            margin-bottom: 15px;
+        }
+
+        form label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            color: #264653;
+        }
+
+        form input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #87CEEB;
+            border-radius: 5px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        form input:focus {
+            border-color: #2A9D8F; 
+        }
+
+        button {
+            background-color: #F2A7C5; 
+            color: #FFFFFF;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #87CEEB; 
+            transform: scale(1.05); 
+        }
+
+        p {
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        p a {
+            text-decoration: none;
+            color: #F2A7C5; 
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        p a:hover {
+            color: #2A9D8F; 
+        }
+    </style>
+</head>
+{% extends 'babysitter_app/base.html' %}
+
+{% block title %}Register - Kare4Kids{% endblock %}
+
+{% block content %}
+<body>
+    <header>
+        <h1>Login to Kare4Kids</h1>
+    </header>
+    <main>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Log in</button>
+        </form>
+        <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
+    </main>
+</body>
+{% endblock %}
+</html>
