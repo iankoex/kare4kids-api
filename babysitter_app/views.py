@@ -20,19 +20,68 @@ from .models import Parent
 from .forms import ParentForm
 from django.views.generic.edit import DeleteView
 from django.urls import reverse_lazy
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.views import View
+from django.contrib.auth.forms import UserCreationForm
+from django.http import JsonResponse
+from django.http import QueryDict
 
+class LoginAPIView(APIView):
+    permission_classes = [AllowAny]  # Make login public
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)       
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "username": user.username,                            \
+                "user_type": user.user_type,  # ✅ Send user_type to frontend
+                "role": user.user_type if hasattr(user, 'user_type') else "user"
+            })
+        else:
+            return Response({"error": "Invalid credentials"}, status=401)
+
+@method_decorator(csrf_exempt, name='dispatch')  # Disable CSRF for API
+
+class RegisterAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        form = UserRegistrationForm(data=request.data)
+
         if form.is_valid():
-            user = form.save()
-            messages.success(request, "Your account has been created! You can now log in.")
-            return redirect('login')
-    else:
-        form = UserRegistrationForm()
+            user = form.save(commit=False)
+            user.user_type = request.data.get('user_type', 'parent')  # Default to 'parent'
+            user.save()
+            refresh = RefreshToken.for_user(user)
 
-    return render(request, 'registration/register.html', {'form': form})
+            return Response({
+                "message": "Registration successful!",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "username": user.username,
+                "role": user.user_type
+            }, status=status.HTTP_201_CREATED)
+
+        return Response({"errors": form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 def user_login(request):
     if request.method == 'POST':
@@ -63,27 +112,6 @@ class UserListView(APIView):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
-
-# API for JWT Login (Sign-In)
-class LoginAPIView(APIView):
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-        user = authenticate(request, username=username, password=password)
-        # Authenticate user
-        if user:
-           # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            access_token = refresh.access_token
-            return Response({
-                'refresh': str(refresh),
-                'access': str(access_token),
-            }, status=status.HTTP_200_OK)
-
-        return Response({
-            'detail': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
 
 def home(request):
     sitters = Sitter.objects.all()
@@ -134,10 +162,6 @@ def sitter_list(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'babysitter_app/sitter_list.html', {'page_obj': page_obj})
-
-def sitter_detail(request, sitter_id):
-    sitter = get_object_or_404(Sitter, id=sitter_id)  # Get the sitter by ID or return a 404
-    return render(request, 'babysitter_app/sitter_detail.html', {'sitter': sitter})
 
 def delete_sitter(request, pk):  
     sitter = get_object_or_404(Sitter, pk=pk)
@@ -190,3 +214,8 @@ class SitterList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class SitterDetail(APIView):
+    def get(self, request, pk):
+        sitter = get_object_or_404(Sitter, pk=pk)
+        return Response(SitterSerializer(sitter).data, status=status.HTTP_200_OK)
