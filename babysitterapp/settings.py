@@ -24,7 +24,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -41,8 +40,9 @@ INSTALLED_APPS = [
     'babysitter_app',
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'corsheaders'
+    'corsheaders'
 ]
+DEBUG = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -52,14 +52,20 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # 'corsheaders.middleware.CorsMiddleware',
-
+    'corsheaders.middleware.CorsMiddleware',
 ]
-# CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:3000',  # or wherever your frontend is hosted
-# ]
+AUTH_USER_MODEL = 'babysitter_app.CustomUser'
 
-ROOT_URLCONF = 'babysitterapp.urls'
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://yourdomain.com',  # Add more domains as needed
+]
+
+ROOT_URLCONF = 'babysitter_app.urls'
 
 TEMPLATES = [
     {
@@ -108,6 +114,7 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
 
 
 # Internationalization
