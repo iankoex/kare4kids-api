@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
-from .views import SitterList, SitterDetail, RegisterAPIView, LoginAPIView, UserListView, CreateSitterView, UpdateSitterView, ParentCreateView, ParentUpdateView, ParentDeleteView
+from .views import SitterList, ProfileView, ProfilePictureUploadView, UpdateParentProfileView, UpdateSitterProfileView, RequestSitterView, UserProfileView, SitterBookingsView, ParentBookingsView,CancelBookingView,  UpdateBookingStatusView ,CurrentUserView, JobListView, SitterDetail, RegisterAPIView, LoginAPIView, UserListView, CreateSitterView, UpdateSitterView, ParentCreateView, ParentUpdateView, ParentDeleteView
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -18,6 +18,8 @@ urlpatterns = [
     path('sitters/create/', CreateSitterView.as_view(), name='create_sitter'),
     path('sitters/update/<int:pk>/', UpdateSitterView.as_view(), name='update_sitter'),
     path('sitters/delete/<int:pk>/', views.delete_sitter, name='delete_sitter'),
+    path('api/request-sitter/<int:sitter_id>/', RequestSitterView.as_view(), name='request_sitter'),
+    path("api/current-user/", CurrentUserView.as_view(), name="current-user"),
     path('api/sitters/<int:pk>/', SitterDetail.as_view(), name='sitter_detail'),
     path('sitters/search/', views.search_sitters, name='search_sitters'), 
     path('api/sitters/', SitterList.as_view(), name='sitter_list_api'), 
@@ -25,4 +27,16 @@ urlpatterns = [
     path('parents/create/', ParentCreateView.as_view(), name='create_parent'),
     path('parents/update/<int:pk>/', ParentUpdateView.as_view(), name='update_parent'),
     path('parents/delete/<int:pk>/', ParentDeleteView.as_view(), name='delete_parent'),
+    path('jobs/request/', RequestSitterView.as_view(), name='request_sitter'),  # POST
+    path('api/sitter/bookings/', SitterBookingsView.as_view(), name='sitter-bookings'),
+    path('jobs/', JobListView.as_view(), name='job_list'),  # GET
+    path("api/bookings/<int:id>/", UpdateBookingStatusView.as_view(), name="update-booking"),
+    path("api/bookings/parent/", ParentBookingsView.as_view(), name="parent-bookings"),
+    path("api/bookings/<int:id>/cancel/", CancelBookingView.as_view(), name="cancel-booking"),
+    path("profile/", UserProfileView.as_view(), name="user-profile"),
+    path("profile/sitter/", UpdateSitterProfileView.as_view(), name="update_sitter_profile"),
+    path("profile/parent/", UpdateParentProfileView.as_view(), name="update_parent_profile"),
+    path("api/profile/upload-picture/", ProfilePictureUploadView.as_view(), name="upload-profile-picture"),
+    path("api/profile/", ProfileView.as_view(), name="user-profile"),
+
 ]
