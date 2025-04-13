@@ -15,7 +15,6 @@ from datetime import timedelta
 import os
 from urllib.parse import urlparse
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -25,9 +24,7 @@ SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
 ALLOWED_HOSTS = ["kare4kids-api-main.fly.dev", "127.0.0.1"]
-
 
 # Application definition
 
@@ -115,27 +112,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'babysitterapp.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # ✅ Correct for string-based BASE_DIR
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Remove the leading slash from the path
-        'USER': 'postgres',
-        'PASSWORD': '5NgN6cPmoIZrumfj',
-        'HOST': 'org-iankoex-inst-dbtwo.data-1.use1.tembo.io',
-        'PORT': '5432',  # Default PostgreSQL port
+        'ENGINE': 'django.db.backends.sqlite3',  # Default to SQLite for development
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# Switch to PostgreSQL for production
+if os.environ.get('DJANGO_ENV') == 'production':
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'postgres'),  # Defaults to 'postgres'
+        'USER': os.getenv('DB_USER', 'postgres'),  # Defaults to 'postgres'
+        'PASSWORD': os.getenv('DB_PASSWORD', 'unknown'),  # Set via environment variable
+        'HOST': os.getenv('DB_HOST', 'host'), # Set via environment variable
+        'PORT': os.getenv('DB_PORT', '5432'),
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -155,8 +151,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -167,7 +161,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
