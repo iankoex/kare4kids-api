@@ -1,8 +1,5 @@
 from rest_framework import serializers
 from .models import Sitter, CustomUser, Parent, Job
-from rest_framework import serializers
-
-from rest_framework import serializers
 from babysitter_app.models import CustomUser, Sitter, Parent
 
 class UserProfileSerializer(serializers.ModelSerializer):

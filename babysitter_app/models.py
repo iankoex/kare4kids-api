@@ -3,13 +3,11 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import MinValueValidator
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import models
 from django.core.validators import MinValueValidator
 from django.conf import settings
 from django.utils.timezone import now 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.conf import settings
-from django.db import models
 
 class CustomUser(AbstractUser):
     profile_picture = models.ImageField(upload_to="profile_pictures/", null=True, blank=True)
