@@ -5,8 +5,9 @@ django-filter==25.1
 djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.0
 gunicorn==23.0.0
-Markdown==3.7
+Markdown==3.8
 packaging==24.2
-pillow==11.1.0
+pillow==11.2.1
+psycopg2-binary==2.9.10
 PyJWT==2.9.0
 sqlparse==0.5.3
