@@ -23,10 +23,10 @@ import logging
 SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['kare4kids.site', 'www.kare4kids.site']
 
 
 # Application definition
@@ -76,17 +76,22 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # This tells Django where t
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 AUTH_USER_MODEL = 'babysitter_app.CustomUser'
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",                        
+    "https://kare4kids.site",
+    "https://www.kare4kids.site",
+    "https://guileless-gingersnap-897d3a.netlify.app",
+    ]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
