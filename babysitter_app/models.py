@@ -80,7 +80,11 @@ class Job(models.Model):
         default='pending'
     )
     created_at = models.DateTimeField(auto_now_add=True)  # ✅ Correct way
-
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[('unpaid', 'Unpaid'), ('paid', 'Paid')],
+        default='unpaid'
+    )
 
     def __str__(self):
         parent_name = self.parent.name if self.parent else "Unknown Parent"

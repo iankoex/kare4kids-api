@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa
 DEBUG = False
 
 
-ALLOWED_HOSTS = ['kare4kids.site', 'www.kare4kids.site']
+ALLOWED_HOSTS = ['kare4kids.site',
+                'www.kare4kids.site',
+                '127.0.0.1',
+                'localhost',
+                ]
 
 
 # Application definition
@@ -213,3 +217,11 @@ LOGGING = {
         'level': 'DEBUG',
     },
 }
+
+MPESA_CONSUMER_KEY = "Vl4ZrBjDuJ5BI9hva0Vv9fP83fAe9A3PGX5oH6Gnz8yA7QDC"
+MPESA_CONSUMER_SECRET = "t4xfoE5E1x3QWGyYLItoj4RMNzguNv6TAQiJmAZLBuoNokNrzgMRlUVW67NdVjaR"
+MPESA_SHORTCODE = "174379"
+MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+MPESA_CALLBACK_URL = "https://8278-129-222-187-153.ngrok-free.app/api/mpesa-callback/"
+MPESA_TOKEN_URL = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+ 

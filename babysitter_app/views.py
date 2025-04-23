@@ -66,6 +66,173 @@ from babysitter_app.models import Sitter, Parent
 from babysitter_app.serializers import UserProfileSerializer
 import logging
 
+import requests
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+from .utils.mpesa import get_mpesa_access_token, generate_mpesa_password
+from django.conf import settings
+
+
+@csrf_exempt
+def pay_with_mpesa(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=400)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+        booking_id = data.get("booking_id")
+        phone_number = "254718524806"  # You can replace this with data.get("phone_number") later
+        amount = 1  # Replace with data.get("amount") if dynamic
+
+        if not booking_id:
+            return JsonResponse({"error": "Booking ID is required"}, status=400)
+
+        access_token = get_mpesa_access_token()
+        if not access_token:
+            return JsonResponse({"error": "Failed to get access token"}, status=500)
+
+        password, timestamp = generate_mpesa_password()
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "BusinessShortCode": settings.MPESA_SHORTCODE,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": amount,
+            "PartyA": phone_number,
+            "PartyB": settings.MPESA_SHORTCODE,
+            "PhoneNumber": phone_number,
+            "CallBackURL": settings.MPESA_CALLBACK_URL,
+            "AccountReference": f"Booking{booking_id}",
+            "TransactionDesc": "Payment for booking"
+        }
+
+        response = requests.post(
+            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+            headers=headers,
+            json=payload
+        )
+
+        if response.status_code == 200:
+            return JsonResponse(response.json(), status=200)
+        else:
+            return JsonResponse({"error": "Failed to initiate payment", "details": response.text}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+class MpesaCallbackView(View):
+    @csrf_exempt  # Exempt from CSRF to allow external requests
+    def post(self, request, *args, **kwargs):
+        try:
+            # Step 1: Parse the callback data from M-Pesa
+            data = json.loads(request.body.decode("utf-8"))
+            print("M-Pesa Callback Data:", json.dumps(data, indent=2))
+            
+            # Step 2: Check if the payment was successful
+            result_code = data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
+            
+            if result_code == 0:
+                # Payment was successful
+                print("✅ Payment successful")
+                
+                # Get the booking ID or reference from the callback (you can add this logic based on your structure)
+                booking_id = data.get('Body', {}).get('stkCallback', {}).get('BookingId')  # This can be added to your STK push payload
+                if booking_id:
+                    # Update the booking status as 'paid'
+                    Booking.objects.filter(id=booking_id).update(status="paid")
+                    # Optionally: Send confirmation or do additional processing
+                    return JsonResponse({"status": "success", "message": "Payment successful!"}, status=200)
+                else:
+                    return JsonResponse({"status": "failed", "message": "Booking ID missing in the callback"}, status=400)
+            else:
+                # Payment failed
+                print("❌ Payment failed")
+                return JsonResponse({"status": "failed", "message": "Payment failed"}, status=200)
+
+        except Exception as e:
+            print("Callback error:", str(e))
+            return JsonResponse({"error": str(e)}, status=400)
+        
+        from django.http import JsonResponse
+from .models import Job
+
+
+@csrf_exempt
+def mpesa_callback(request):
+    if request.method == 'POST':
+        try:
+            payload = json.loads(request.body)
+
+            # Adjust these keys to match Safaricom's callback structure
+            result_code = payload.get("Body", {}).get("stkCallback", {}).get("ResultCode")
+            metadata = payload.get("Body", {}).get("stkCallback", {}).get("CallbackMetadata", {})
+            
+            if result_code == 0:
+                # Successful transaction
+                booking_id = metadata.get("Item", [{}])[0].get("Value")  # Make sure this is your booking ID
+                
+                job = Job.objects.get(id=booking_id)
+                job.payment_status = 'paid'
+                job.save()
+
+                # OPTIONAL: Notify parent (e.g., in-app, toast, etc.)
+                parent = job.parent
+                sitter = job.sitter
+
+                # Placeholder print — replace with real notification logic
+                print(f"✅ Payment for Job {job.id} successful. Notify parent: {parent.name}, sitter: {sitter.name}")
+
+                return JsonResponse({'status': 'Payment recorded successfully'})
+            else:
+                return JsonResponse({'error': 'Payment failed'}, status=400)
+
+        except Job.DoesNotExist:
+            return JsonResponse({'error': 'Job not found'}, status=404)
+        except Exception as e:
+            print("Callback Error:", e)
+            return JsonResponse({'error': 'Invalid callback'}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def job_status_view(request, booking_id):
+    # Fetch the job using booking_id
+    job = get_object_or_404(Job, id=booking_id)
+
+    # Return the job status (you can add more details if needed)
+    return JsonResponse({
+        "id": job.id,
+        "status": job.status,
+        "sitter_name": job.sitter.name,  # Assuming there's a relationship with Sitter
+        #"total_amount": job.duration * job.rate  # Adjust based on your model
+    })
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def mark_job_completed(request, id):
+    try:
+        job = Job.objects.get(id=id)
+        if job.status != 'accepted':
+            return Response({'error': 'Only accepted jobs can be marked completed.'}, status=http_status.HTTP_400_BAD_REQUEST)
+        
+        # Optional: check that the user is the assigned sitter
+        if job.sitter.user != request.user:
+            return Response({'error': 'You are not authorized to complete this job.'}, status=http_status.HTTP_403_FORBIDDEN)
+        
+        job.status = 'completed'
+        job.save()
+        return Response(JobSerializer(job).data, status=http_status.HTTP_200_OK)
+    except Job.DoesNotExist:
+        return Response({'error': 'Job not found'}, status=http_status.HTTP_404_NOT_FOUND)
+
+
+
 logger = logging.getLogger(__name__)
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])

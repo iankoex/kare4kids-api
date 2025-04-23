@@ -59,11 +59,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class JobSerializer(serializers.ModelSerializer):
+    # Add parent_name field explicitly
+    parent_name = serializers.CharField(source='parent.name', read_only=True)
     class Meta:
         model = Job
-        fields = '__all__'  # ✅ No `rate` field anymore
+        fields = '__all__'  
+
 
 class ParentSerializer(serializers.ModelSerializer):
     class Meta:
