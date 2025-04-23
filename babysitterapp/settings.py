@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["kare4kids-api-main.fly.dev", "127.0.0.1"]
+ALLOWED_HOSTS = ["kare4kids-api-main.fly.dev", "127.0.0.1", "api.kare4kids.site"]
 
 # Application definition
 
@@ -83,13 +83,14 @@ MIDDLEWARE = [
 ]
 AUTH_USER_MODEL = 'babysitter_app.CustomUser'
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "https://kare4kids-api-main.fly.dev"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "https://kare4kids-api-main.fly.dev", "https://api.kare4kids.site"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
-    'https://kare4kids-api-main.fly.dev',  # Add more domains as needed
+    'https://kare4kids-api-main.fly.dev', 
+    'https://api.kare4kids.site' # Add more domains as needed
 ]
 
 ROOT_URLCONF = 'babysitter_app.urls'
