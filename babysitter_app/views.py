@@ -58,6 +58,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework import status
 import logging
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -65,6 +66,7 @@ from rest_framework.permissions import IsAuthenticated
 from babysitter_app.models import Sitter, Parent
 from babysitter_app.serializers import UserProfileSerializer
 import logging
+import json
 
 import requests
 from django.http import JsonResponse
@@ -145,8 +147,8 @@ class MpesaCallbackView(View):
                 # Get the booking ID or reference from the callback (you can add this logic based on your structure)
                 booking_id = data.get('Body', {}).get('stkCallback', {}).get('BookingId')  # This can be added to your STK push payload
                 if booking_id:
-                    # Update the booking status as 'paid'
-                    Booking.objects.filter(id=booking_id).update(status="paid")
+                    # Update the job status as 'paid'
+                    Job.objects.filter(id=booking_id).update(status="paid")  # Use Job model instead of Booking
                     # Optionally: Send confirmation or do additional processing
                     return JsonResponse({"status": "success", "message": "Payment successful!"}, status=200)
                 else:
@@ -159,10 +161,6 @@ class MpesaCallbackView(View):
         except Exception as e:
             print("Callback error:", str(e))
             return JsonResponse({"error": str(e)}, status=400)
-        
-        from django.http import JsonResponse
-from .models import Job
-
 
 @csrf_exempt
 def mpesa_callback(request):
@@ -178,7 +176,7 @@ def mpesa_callback(request):
                 # Successful transaction
                 booking_id = metadata.get("Item", [{}])[0].get("Value")  # Make sure this is your booking ID
                 
-                job = Job.objects.get(id=booking_id)
+                job = Job.objects.get(id=booking_id)  # Ensure you are using the Job model
                 job.payment_status = 'paid'
                 job.save()
 
@@ -200,7 +198,6 @@ def mpesa_callback(request):
             return JsonResponse({'error': 'Invalid callback'}, status=400)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 def job_status_view(request, booking_id):
     # Fetch the job using booking_id
     job = get_object_or_404(Job, id=booking_id)
@@ -219,19 +216,29 @@ def mark_job_completed(request, id):
     try:
         job = Job.objects.get(id=id)
         if job.status != 'accepted':
-            return Response({'error': 'Only accepted jobs can be marked completed.'}, status=http_status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Only accepted jobs can be marked completed.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # Optional: check that the user is the assigned sitter
         if job.sitter.user != request.user:
-            return Response({'error': 'You are not authorized to complete this job.'}, status=http_status.HTTP_403_FORBIDDEN)
+            return Response(
+                {'error': 'You are not authorized to complete this job.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         job.status = 'completed'
         job.save()
-        return Response(JobSerializer(job).data, status=http_status.HTTP_200_OK)
+        return Response(
+            JobSerializer(job).data,
+            status=status.HTTP_200_OK
+        )
+        
     except Job.DoesNotExist:
-        return Response({'error': 'Job not found'}, status=http_status.HTTP_404_NOT_FOUND)
-
-
+        return Response(
+            {'error': 'Job not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 logger = logging.getLogger(__name__)
 @api_view(["GET", "PATCH"])
