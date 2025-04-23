@@ -2,7 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from . import views
-from .views import SitterList, ProfileView, ProfilePictureUploadView, UpdateParentProfileView, UpdateSitterProfileView, RequestSitterView, UserProfileView, SitterBookingsView, ParentBookingsView,CancelBookingView,  UpdateBookingStatusView ,CurrentUserView, JobListView, SitterDetail, RegisterAPIView, LoginAPIView, UserListView, CreateSitterView, UpdateSitterView, ParentCreateView, ParentUpdateView, ParentDeleteView
+from .views import SitterList, mpesa_callback ,MpesaCallbackView,pay_with_mpesa,job_status_view ,mark_job_completed, ProfileView, ProfilePictureUploadView, UpdateParentProfileView, UpdateSitterProfileView, RequestSitterView, UserProfileView, SitterBookingsView, ParentBookingsView,CancelBookingView,  UpdateBookingStatusView ,CurrentUserView, JobListView, SitterDetail, RegisterAPIView, LoginAPIView, UserListView, CreateSitterView, UpdateSitterView, ParentCreateView, ParentUpdateView, ParentDeleteView
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -38,5 +38,9 @@ urlpatterns = [
     path("profile/parent/", UpdateParentProfileView.as_view(), name="update_parent_profile"),
     path("api/profile/upload-picture/", ProfilePictureUploadView.as_view(), name="upload-profile-picture"),
     path("api/profile/", ProfileView.as_view(), name="user-profile"),
-
+    path('api/jobs/<int:id>/complete/', mark_job_completed, name='mark_job_completed'),
+    path('api/pay-mpesa/', pay_with_mpesa, name='pay_with_mpesa'),
+    path('api/mpesa/callback/', MpesaCallbackView.as_view(), name='mpesa-callback'),
+    path('api/bookings/parent/<int:booking_id>/status/', views.job_status_view, name='job-status'),
+    path('api/mpesa-callback/', mpesa_callback, name='mpesa_callback'),
 ]
