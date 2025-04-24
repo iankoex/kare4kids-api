@@ -13,9 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
-import logging
-from corsheaders.defaults import default_headers
-
+from urllib.parse import urlparse
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -24,14 +22,10 @@ from corsheaders.defaults import default_headers
 SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
+ALLOWED_HOSTS = ["kare4kids-api-main.fly.dev", "127.0.0.1", "api.kare4kids.site"]
 
-ALLOWED_HOSTS = [
-    "kare4kids-api-main.fly.dev",
-    "127.0.0.1",
-    "api.kare4kids.site"
-]
 # Application definition
 
 INSTALLED_APPS = [
@@ -78,7 +72,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # This tells Django where to collect static files
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -86,29 +79,18 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 AUTH_USER_MODEL = 'babysitter_app.CustomUser'
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",                        
-    "https://kare4kids.site",
-    "https://guileless-gingersnap-897d3a.netlify.app",
-    ]
-CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "https://kare4kids-api-main.fly.dev", "https://api.kare4kids.site"]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "https://kare4kids.site", 
-    "https://www.kare4kids.site", 
-    "https://api.kare4kids.site", 
-    "https://guileless-gingersnap-897d3a.netlify.app", 
-    "http://localhost:5173",
-]
-
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    'access-control-allow-origin',
-    'authorization',
-    'x-csrftoken',
-    'contenttype',
+    'http://localhost:5173',
+    'https://kare4kids-api-main.fly.dev', 
+    'https://api.kare4kids.site' # Add more domains as needed
 ]
 
 ROOT_URLCONF = 'babysitter_app.urls'
@@ -136,12 +118,12 @@ WSGI_APPLICATION = 'babysitterapp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # ✅ Correct for string-based BASE_DIR
+        'ENGINE': 'django.db.backends.sqlite3',  # Default to SQLite for development
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
-
+# Switch to PostgreSQL for production
 if os.environ.get('DJANGO_ENV') == 'production':
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.postgresql',
@@ -170,8 +152,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -182,7 +162,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -214,27 +193,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'  # Redirect here if the user tries to access a restricted page
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
-        },
-    },
-    'root': {
-        'handlers': ['file'],
-        'level': 'DEBUG',
-    },
-}
-
-MPESA_CONSUMER_KEY = "Vl4ZrBjDuJ5BI9hva0Vv9fP83fAe9A3PGX5oH6Gnz8yA7QDC"
-MPESA_CONSUMER_SECRET = "t4xfoE5E1x3QWGyYLItoj4RMNzguNv6TAQiJmAZLBuoNokNrzgMRlUVW67NdVjaR"
-MPESA_SHORTCODE = "174379"
-MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL = "https://8278-129-222-187-153.ngrok-free.app/api/mpesa-callback/"
-MPESA_TOKEN_URL = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
- 
