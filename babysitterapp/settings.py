@@ -27,11 +27,13 @@ SECRET_KEY = 'django-insecure-ms3rvtd&97p7c0=b_#7ov5a10xt+)m87s7l7#9bcu#rj42)%oa
 DEBUG = False
 
 
-ALLOWED_HOSTS = ['kare4kids.site',
-                'www.kare4kids.site',
-                '127.0.0.1',
-                'localhost',
-                ]
+ALLOWED_HOSTS = [
+    'kare4kids.site',
+    'www.kare4kids.site',
+    'api.kare4kids.site',
+    '127.0.0.1',
+    'localhost',
+]
 
 
 # Application definition
