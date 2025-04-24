@@ -80,8 +80,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # This tells Django where to collect static files
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,10 +94,9 @@ AUTH_USER_MODEL = 'babysitter_app.CustomUser'
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",                        
     "https://kare4kids.site",
-    "https://www.kare4kids.site",
     "https://guileless-gingersnap-897d3a.netlify.app",
     ]
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "https://kare4kids.site", 
