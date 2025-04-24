@@ -139,6 +139,16 @@ DATABASES = {
 }
 
 
+if os.environ.get('DJANGO_ENV') == 'production':
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'postgres'),  # Defaults to 'postgres'
+        'USER': os.getenv('DB_USER', 'postgres'),  # Defaults to 'postgres'
+        'PASSWORD': os.getenv('DB_PASSWORD', 'unknown'),  # Set via environment variable
+        'HOST': os.getenv('DB_HOST', 'host'), # Set via environment variable
+        'PORT': os.getenv('DB_PORT', '5432'),
+    }
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
