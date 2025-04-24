@@ -28,14 +28,10 @@ DEBUG = False
 
 
 ALLOWED_HOSTS = [
-    'kare4kids.site',
-    'www.kare4kids.site',
-    'api.kare4kids.site',
-    '127.0.0.1',
-    'localhost',
+    "kare4kids-api-main.fly.dev",
+    "127.0.0.1",
+    "api.kare4kids.site"
 ]
-
-
 # Application definition
 
 INSTALLED_APPS = [
