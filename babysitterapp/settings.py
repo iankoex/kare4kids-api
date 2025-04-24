@@ -97,15 +97,16 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.kare4kids.site",
     "https://guileless-gingersnap-897d3a.netlify.app",
     ]
-CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://yourdomain.com',  
-    "https://kare4kids.site",
-    "https://www.kare4kids.site",
-    "https://guileless-gingersnap-897d3a.netlify.app",  
-    ]
+    "https://kare4kids.site", 
+    "https://www.kare4kids.site", 
+    "https://api.kare4kids.site", 
+    "https://guileless-gingersnap-897d3a.netlify.app", 
+    "http://localhost:5173",
+]
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'access-control-allow-origin',
     'authorization',
