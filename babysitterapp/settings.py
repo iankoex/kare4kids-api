@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 import logging
+from corsheaders.defaults import default_headers
 
 
 # Quick-start development settings - unsuitable for production
@@ -105,6 +106,12 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.kare4kids.site",
     "https://guileless-gingersnap-897d3a.netlify.app",  
     ]
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'access-control-allow-origin',
+    'authorization',
+    'x-csrftoken',
+    'contenttype',
+]
 
 ROOT_URLCONF = 'babysitter_app.urls'
 
