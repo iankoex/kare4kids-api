@@ -87,14 +87,13 @@ CSRF_TRUSTED_ORIGINS = ["http://localhost:5173",
                         "https://kare4kids-api-main.fly.dev",
                         "https://api.kare4kids.site"]
 
-CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOWED_ORIGINS = [
     'https://kare4kids.site',
     'https://api.kare4kids.site',
     'http://localhost:5173',
     'https://kare4kids-api-main.fly.dev',
 ]
+CORS_ALLOW_CREDENTIALS = True 
 
 ROOT_URLCONF = 'babysitter_app.urls'
 
