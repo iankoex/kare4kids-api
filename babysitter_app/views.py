@@ -1,184 +1,71 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, QueryDict
-from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
-from django.views import View
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.contrib import messages
 from django.core.paginator import Paginator
-from django.urls import reverse_lazy
-from django.conf import settings
-from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
+from django.views.generic.edit import FormView
+from .models import Sitter, Parent, Job
+from .forms import UserRegistrationForm, LoginForm, SitterForm, ParentForm
+from .serializers import SitterSerializer, UserSerializer, JobSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions, generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Sitter, Parent, Job, CustomUser
-from .forms import (UserRegistrationForm, LoginForm, SitterForm, ParentForm)
-from .serializers import (SitterSerializer, UserSerializer, JobSerializer, UserProfileSerializer, SitterProfileSerializer, ParentProfileSerializer)
-from .utils.mpesa import get_mpesa_access_token, generate_mpesa_password
-import requests
+from django.views.generic.edit import CreateView, UpdateView
+from rest_framework.generics import ListAPIView
+from django.urls import reverse_lazy
+from .models import Parent
+from .forms import ParentForm
+from django.views.generic.edit import DeleteView
+from django.urls import reverse_lazy
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.forms import UserCreationForm
+from django.views import View
+from django.contrib.auth.forms import UserCreationForm
+from django.http import JsonResponse
+from django.http import QueryDict
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from django.shortcuts import get_object_or_404
+from .models import Job
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from .models import CustomUser
+from .serializers import UserProfileSerializer, SitterProfileSerializer,ParentProfileSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 import logging
-import json
-
-@csrf_exempt
-def pay_with_mpesa(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
-
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-        booking_id = data.get("booking_id")
-        phone_number = "254718524806"
-        amount = 1 
-
-        if not booking_id:
-            return JsonResponse({"error": "Booking ID is required"}, status=400)
-
-        access_token = get_mpesa_access_token()
-        if not access_token:
-            return JsonResponse({"error": "Failed to get access token"}, status=500)
-
-        password, timestamp = generate_mpesa_password()
-
-        headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-
-        payload = {
-            "BusinessShortCode": settings.MPESA_SHORTCODE,
-            "Password": password,
-            "Timestamp": timestamp,
-            "TransactionType": "CustomerPayBillOnline",
-            "Amount": amount,
-            "PartyA": phone_number,
-            "PartyB": settings.MPESA_SHORTCODE,
-            "PhoneNumber": phone_number,
-            "CallBackURL": settings.MPESA_CALLBACK_URL,
-            "AccountReference": f"Booking{booking_id}",
-            "TransactionDesc": "Payment for booking"
-        }
-
-        response = requests.post(
-            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-            headers=headers,
-            json=payload
-        )
-
-        if response.status_code == 200:
-            return JsonResponse(response.json(), status=200)
-        else:
-            return JsonResponse({"error": "Failed to initiate payment", "details": response.text}, status=400)
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-class MpesaCallbackView(View):
-    @csrf_exempt
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body.decode("utf-8"))
-            print("M-Pesa Callback Data:", json.dumps(data, indent=2))            
-            result_code = data.get("Body", {}).get("stkCallback", {}).get("ResultCode")
-            
-            if result_code == 0:
-                print("✅ Payment successful")
-                
-                booking_id = data.get('Body', {}).get('stkCallback', {}).get('BookingId')  
-                if booking_id:
-                    Job.objects.filter(id=booking_id).update(status="paid")  
-                    return JsonResponse({"status": "success", "message": "Payment successful!"}, status=200)
-                else:
-                    return JsonResponse({"status": "failed", "message": "Booking ID missing in the callback"}, status=400)
-            else:
-                print("❌ Payment failed")
-                return JsonResponse({"status": "failed", "message": "Payment failed"}, status=200)
-
-        except Exception as e:
-            print("Callback error:", str(e))
-            return JsonResponse({"error": str(e)}, status=400)
-
-@csrf_exempt
-def mpesa_callback(request):
-    if request.method == 'POST':
-        try:
-            payload = json.loads(request.body)
-
-            result_code = payload.get("Body", {}).get("stkCallback", {}).get("ResultCode")
-            metadata = payload.get("Body", {}).get("stkCallback", {}).get("CallbackMetadata", {})
-            
-            if result_code == 0:
-                booking_id = metadata.get("Item", [{}])[0].get("Value")  
-                
-                job = Job.objects.get(id=booking_id) 
-                job.payment_status = 'paid'
-                job.save()
-
-                parent = job.parent
-                sitter = job.sitter
-
-                print(f"✅ Payment for Job {job.id} successful. Notify parent: {parent.name}, sitter: {sitter.name}")
-
-                return JsonResponse({'status': 'Payment recorded successfully'})
-            else:
-                return JsonResponse({'error': 'Payment failed'}, status=400)
-
-        except Job.DoesNotExist:
-            return JsonResponse({'error': 'Job not found'}, status=404)
-        except Exception as e:
-            print("Callback Error:", e)
-            return JsonResponse({'error': 'Invalid callback'}, status=400)
-    
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
-def job_status_view(request, booking_id):
-    job = get_object_or_404(Job, id=booking_id)
-
-    return JsonResponse({
-        "id": job.id,
-        "status": job.status,
-        "sitter_name": job.sitter.name,  
-    })
-
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def mark_job_completed(request, id):
-    try:
-        job = Job.objects.get(id=id)
-        if job.status != 'accepted':
-            return Response(
-                {'error': 'Only accepted jobs can be marked completed.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        if job.sitter.user != request.user:
-            return Response(
-                {'error': 'You are not authorized to complete this job.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        job.status = 'completed'
-        job.save()
-        return Response(
-            JobSerializer(job).data,
-            status=status.HTTP_200_OK
-        )
-        
-    except Job.DoesNotExist:
-        return Response(
-            {'error': 'Job not found'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from babysitter_app.models import Sitter, Parent
+from babysitter_app.serializers import UserProfileSerializer
+import logging
 
 logger = logging.getLogger(__name__)
 @api_view(["GET", "PATCH"])
@@ -190,22 +77,24 @@ def user_profile(request):
         sitter = user.sitter
 
     if request.method == "PATCH":
-        print(f"🔥 Received Data: {request.data}")  
+        print(f"🔥 Received Data: {request.data}")  # Log incoming data
 
         serializer = SitterProfileSerializer(sitter, data=request.data.get("sitter", {}), partial=True)
         if serializer.is_valid():
-            print(f"✅ Valid Data: {serializer.validated_data}")  
+            print(f"✅ Valid Data: {serializer.validated_data}")  # Log valid data
             serializer.save()
-            sitter.refresh_from_db() 
+            sitter.refresh_from_db()  # 🔥 Ensure fresh data is fetched
             return Response(serializer.data, status=200)
 
-        print(f"❌ Serializer Errors: {serializer.errors}")  
-        return Response(serializer.errors, status=400)  
+        print(f"❌ Serializer Errors: {serializer.errors}")  # Log errors
+        return Response(serializer.errors, status=400)  # Return errors if invalid
+
 def update_profile(request):
     user = request.user
 
     print(f"🔹 User: {user.username}, Type: {user.user_type}")
 
+    # Check if user has a sitter or parent profile
     if hasattr(user, "sitter"):
         profile = user.sitter
         print("✅ Found Sitter Profile")
@@ -218,6 +107,7 @@ def update_profile(request):
 
     print(f"🔥 Incoming Request Data: {request.data}")
 
+    # Extract sitter data
     sitter_data = request.data.get("sitter", None)
 
     if not sitter_data:
@@ -226,6 +116,7 @@ def update_profile(request):
 
     print(f"✅ Extracted Sitter Data: {sitter_data}")
 
+    # Update fields
     updated_fields = []
     for key, value in sitter_data.items():
         if hasattr(profile, key):
@@ -235,8 +126,9 @@ def update_profile(request):
         else:
             print(f"⚠️ Ignoring unknown field: {key}")
 
+    # Save if any fields were updated
     if updated_fields:
-        profile.save()  
+        profile.save()  # Force saving
         profile.refresh_from_db()
         print(f"✅ Updated Profile: {vars(profile)}")
         return Response({"message": "Profile updated successfully", "updated_fields": updated_fields})
@@ -254,7 +146,7 @@ class UpdateSitterProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         user = self.request.user
         if hasattr(user, "sitter"):
-            user.sitter.refresh_from_db()  
+            user.sitter.refresh_from_db()  # 🔥 Ensures fresh data
             return user.sitter
         return Response({"error": "User is not a sitter"}, status=400)
 
@@ -278,7 +170,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
 
     def get_object(self):
-        return self.request.user 
+        return self.request.user  # Returns the logged-in user
 
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
@@ -290,18 +182,18 @@ def user_profile(request):
         sitter = user.sitter
 
     if request.method == "PATCH":
-        print(f"🔥 Received Data: {request.data}")
+        print(f"🔥 Received Data: {request.data}")  # Log incoming data
     serializer = SitterProfileSerializer(sitter, data=request.data, partial=True)
     if serializer.is_valid():
-        print(f"✅ Valid Data: {serializer.validated_data}") 
+        print(f"✅ Valid Data: {serializer.validated_data}")  # Log valid data
         serializer.save()
-        sitter.refresh_from_db() 
+        sitter.refresh_from_db()  # 🔥 Ensure fresh data is fetched
         return Response(serializer.data, status=200)
-    print(f"❌ Serializer Errors: {serializer.errors}") 
+    print(f"❌ Serializer Errors: {serializer.errors}")  # Log errors
     return Response(serializer.errors, status=400)
    
 class LoginAPIView(APIView):
-    permission_classes = [AllowAny]  
+    permission_classes = [AllowAny]  # Make login public
 
     def post(self, request):
         username = request.data.get("username")
@@ -314,20 +206,18 @@ class LoginAPIView(APIView):
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
                 "username": user.username,                            
-                "user_type": user.user_type,  
+                "user_type": user.user_type,  # ✅ Send user_type to frontend
                 "role": user.user_type if hasattr(user, 'user_type') else "user"
             })
         else:
             return Response({"error": "Invalid credentials"}, status=401)
 
-@method_decorator(csrf_exempt, name='dispatch')  
+@method_decorator(csrf_exempt, name='dispatch')  # Disable CSRF for API
+
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
-        if User.objects.filter(username=username).exists():
-            raise ValidationError({"detail": "Username already exists."})
 
         form = UserRegistrationForm(data=request.data)
         if form.is_valid():
@@ -339,12 +229,14 @@ class RegisterAPIView(APIView):
                 Parent.objects.create(user=user, name=user.username)
             elif user.user_type == 'sitter':
                 Sitter.objects.create(
-                    user=user,
-                    name=user.username,  
-                    experience=request.data.get('experience', 0),  
-                    location=request.data.get('location', 'Unknown'),  
-                    bio=request.data.get('bio', ''),  
-                )
+                user=user,
+                name=user.username,  # Assign a default name (or ask for it in the form)
+                experience=request.data.get('experience', 0),  # Ensure experience is set
+                location=request.data.get('location', 'Unknown'),  # Set a default location
+                bio=request.data.get('bio', ''),  # Ensure bio is set
+            )
+
+
             refresh = RefreshToken.for_user(user)
 
             return Response({
@@ -355,7 +247,9 @@ class RegisterAPIView(APIView):
                 "role": user.user_type
             }, status=status.HTTP_201_CREATED)
 
+        # 🚨 Debugging: Log form errors
         return Response({"errors": form.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 def user_login(request):
     if request.method == 'POST':
@@ -366,7 +260,7 @@ def user_login(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('home')  
+                return redirect('home')  # Replace 'home' with your desired redirect URL name
             else:
                 form.add_error(None, "Invalid username or password.")
     else:
@@ -382,9 +276,9 @@ def user_logout(request):
 User = get_user_model()
 
 class UserListView(ListAPIView):
-    queryset = User.objects.all().only("id", "username", "email")  
+    queryset = User.objects.all().only("id", "username", "email")  # Optimize fields
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]  
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access
 
 def home(request):
     sitters = Sitter.objects.all()
@@ -403,6 +297,7 @@ class RequestSitterView(APIView):
         try:
             user = request.user
 
+            # Ensure the requesting user is a parent
             if not hasattr(user, "parent"):
                 return Response({"error": "Only parents can request a sitter"}, status=403)
 
@@ -433,7 +328,7 @@ class CurrentUserView(APIView):
             "username": user.username,
             "is_parent": hasattr(user, "parent"),
             "is_sitter": hasattr(user, "sitter"),
-            "parent": {"id": user.parent.id} if hasattr(user, "parent") else None,  
+            "parent": {"id": user.parent.id} if hasattr(user, "parent") else None,  # 🔥 Ensure this is included
             "sitter": {"id": user.sitter.id} if hasattr(user, "sitter") else None,
         }
         return Response(data)
@@ -445,7 +340,7 @@ class JobListView(APIView):
     def get(self, request):
         try:
             if hasattr(request.user, "parent"):
-                jobs = Job.objects.select_related("sitter", "parent").filter(parent=request.user.parent) 
+                jobs = Job.objects.select_related("sitter", "parent").filter(parent=request.user.parent)  # Parent's requests
             elif hasattr(request.user, "sitter"):
                 jobs = Job.objects.select_related("parent", "sitter").filter(sitter=request.user.sitter) 
             else:
@@ -465,6 +360,7 @@ class SitterBookingsView(APIView):
         if not hasattr(request.user, 'sitter'):
             return Response({"error": "Unauthorized – Only sitters can access this."}, status=status.HTTP_403_FORBIDDEN)
 
+        # Get pending and accepted jobs for the logged-in sitter
         jobs = Job.objects.filter(sitter=request.user.sitter)
         serializer = JobSerializer(jobs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -474,8 +370,8 @@ class CreateSitterView(FormView):
     form_class = SitterForm
 
     def form_valid(self, form):
-        form.save()  
-        return redirect('sitter_list')  
+        form.save()  # Save the new sitter
+        return redirect('sitter_list')  # Redirect to the sitter list view
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
@@ -500,8 +396,8 @@ class UpdateSitterView(FormView):
         return initial
 
     def form_valid(self, form):
-        form.save()  
-        return redirect('sitter_list')  
+        form.save()  # Save the updated sitter
+        return redirect('sitter_list')  # Redirect to the sitter list view
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
@@ -576,19 +472,23 @@ class UpdateBookingStatusView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, id):
-        user = request.user 
-        job = get_object_or_404(Job, id=id)  
+        user = request.user  # Logged-in user
+        job = get_object_or_404(Job, id=id)  # Fetch the booking
 
+        # ✅ Ensure the user is a sitter & owns the booking
         if not hasattr(user, 'sitter') or job.sitter.user != user:
             return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
 
+        # ✅ Ensure the booking is still pending
         if job.status != 'pending':
             return Response({"error": "Booking cannot be modified"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # ✅ Get the new status from the request
         new_status = request.data.get('status')
         if new_status not in ["accepted", "declined"]:
             return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # ✅ Update the booking status
         job.status = new_status
         job.save()
 
@@ -603,8 +503,8 @@ class ParentBookingsView(ListAPIView):
         """Return bookings belonging to the logged-in parent."""
         user = self.request.user
 
-        if not hasattr(user, "parent"): 
-            return Job.objects.none()  
+        if not hasattr(user, "parent"):  # Ensure user is a parent
+            return Job.objects.none()  # Return empty queryset if not a parent
 
         return Job.objects.filter(parent=user.parent).order_by("-job_date")
     
@@ -615,9 +515,11 @@ class CancelBookingView(APIView):
         user = request.user
         job = get_object_or_404(Job, id=id)
 
+        # ✅ Ensure only the parent who created the booking can cancel
         if not hasattr(user, "parent") or job.parent.user != user:
             return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
 
+        # ✅ Only allow canceling if it's pending or accepted
         if job.status not in ["pending", "accepted"]:
             return Response({"error": "Cannot cancel this booking"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -626,15 +528,19 @@ class CancelBookingView(APIView):
 
 class ProfilePictureUploadView(APIView):
     def patch(self, request, *args, **kwargs):
-        user = request.user 
-
+        user = request.user  # Get the authenticated user
+        
+        # Check if file exists in request
         if "profile_picture" not in request.FILES:
             return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Get the uploaded file
         uploaded_file = request.FILES["profile_picture"]
 
+        # ✅ Save the file
         user.profile_picture.save(uploaded_file.name, uploaded_file, save=True)
 
+        # ✅ Now, return the full URL
         if user.profile_picture:
             profile_picture_url = request.build_absolute_uri(user.profile_picture.url)
         else:
@@ -643,13 +549,13 @@ class ProfilePictureUploadView(APIView):
         return Response({"profile_picture": profile_picture_url}, status=status.HTTP_200_OK)
 class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = UserProfileSerializer 
+    serializer_class = UserProfileSerializer  # Make sure this is handling updates
 
     def get_object(self):
         return self.request.user
 
     def update(self, request, *args, **kwargs):
-        print(f"🔥 Received Data in ProfileView: {request.data}") 
+        print(f"🔥 Received Data in ProfileView: {request.data}")  # Debugging
         response = super().update(request, *args, **kwargs)
-        print(f"✅ Updated Profile Data: {response.data}")  
+        print(f"✅ Updated Profile Data: {response.data}")  # Confirm updates
         return response
