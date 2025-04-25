@@ -38,5 +38,6 @@ urlpatterns = [
     path("profile/parent/", UpdateParentProfileView.as_view(), name="update_parent_profile"),
     path("api/profile/upload-picture/", ProfilePictureUploadView.as_view(), name="upload-profile-picture"),
     path("api/profile/", ProfileView.as_view(), name="user-profile"),
+    path('api/jobs/<int:id>/complete/', mark_job_completed, name='mark_job_completed'),
 
 ]

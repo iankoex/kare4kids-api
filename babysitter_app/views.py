@@ -559,3 +559,32 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         response = super().update(request, *args, **kwargs)
         print(f"✅ Updated Profile Data: {response.data}")  # Confirm updates
         return response
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def mark_job_completed(request, id):
+    try:
+        job = Job.objects.get(id=id)
+        if job.status != 'accepted':
+            return Response(
+                {'error': 'Only accepted jobs can be marked completed.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if job.sitter.user != request.user:
+            return Response(
+                {'error': 'You are not authorized to complete this job.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        job.status = 'completed'
+        job.save()
+        return Response(
+            JobSerializer(job).data,
+            status=status.HTTP_200_OK
+        )
+        
+    except Job.DoesNotExist:
+        return Response(
+            {'error': 'Job not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
